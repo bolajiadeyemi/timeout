@@ -1,4 +1,4 @@
-import {filter, flatten, uniq, isArray, includes} from 'lodash';
+import {filter, flatten, uniq, isArray, includes, each, isEqual, difference } from 'lodash';
 const venues = [
     {
         "name": "El Cantina",
@@ -85,17 +85,24 @@ const users = [
     }
 ];
 
-function safePlacecallback(venue, wontEat, safe) {
-    return safe === true ? !includes(venue.food, wontEat) : includes(venue.food, wontEat);
-}
 
-function getVenues(wontEats, safe) {
-    let safePlaces = []
+function getVenues(members) {
+   let goodForDrinks = [];
+   const safePlaces = [];
 
-    if (!isArray(wontEats)) return safePlaces;
+    members.forEach((member) => {
+        each(member.drinks, (drink) => {
+            goodForDrinks.push(venues.filter((venue) => includes(venue.drinks, drink)));
+        });
+    });
+    goodForDrinks = uniq(flatten(goodForDrinks));
 
-    wontEats.forEach((wontEat) => {
-        safePlaces.push(venues.filter((venue) => safePlacecallback(venue, wontEat, safe)))
+    members.forEach((member) => {
+        each(member.wont_eat, (wontEat) => {
+            safePlaces.push(goodForDrinks.filter((place) => {
+                return !isEqual(place.food, wontEat) || place.food.length > wontEat.length;
+            }))
+        });
     });
 
     return uniq(flatten(safePlaces));
@@ -111,11 +118,12 @@ function getMembersCompleteInfo(members) {
 
     return flatten(membersArray);
 }
+
 export function fetchSafePlaces(goingMembers) {
     const members = getMembersCompleteInfo(goingMembers);
-    const wontEats = uniq(flatten(members.map((i) => i.wont_eat)));
-    const safePlaces = getVenues(wontEats, true);
-    const unsafePlaces = getVenues(wontEats, false);
+    const safePlaces = getVenues(members);
+    const unsafePlaces =  difference(venues, safePlaces);
+
     return {
         safePlaces,
         unsafePlaces

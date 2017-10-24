@@ -1,4 +1,5 @@
 import React from 'react';
+import { isEmpty } from 'lodash';
 import {fetchSafePlaces} from '../utils/api';
 
 class Home extends React.Component {
@@ -15,7 +16,7 @@ class Home extends React.Component {
     handleSubmit(event) {
         event.preventDefault();
         const { teamMembers } = this.state;
-        const { safePlaces, unsafePlaces } = fetchSafePlaces(teamMembers);
+        const { safePlaces = [], unsafePlaces = []} = fetchSafePlaces(teamMembers);
 
         this.setState({ safePlaces, unsafePlaces })
     }
@@ -31,7 +32,7 @@ class Home extends React.Component {
         return (<div className="home-container">
             <h1>Looking for a safe place to eat?</h1>
             <form className="column" onSubmit={this.handleSubmit}>
-                <label className="header" htmlFor="username">
+                <label className="header" htmlFor="teamMembers">
                 which members are going?
                 </label>
                 <input id='teamMembers'
@@ -47,13 +48,13 @@ class Home extends React.Component {
                 >Submit</button>
             </form>
             {this.state.safePlaces && <div>
-                <h3>{'Places to go:'}</h3>
+                {!isEmpty(this.state.safePlaces) && <h3>{'Places to go:'}</h3>}
                 <ul>
                     {this.state.safePlaces.map((place, index) => <li key={index}>{place.name}</li>)}
                 </ul>
             </div>}
             {this.state.unsafePlaces && <div>
-                <h3>{'Places to avoid:'}</h3>
+                {!isEmpty(this.state.unsafePlaces) && <h3>{'Places to avoid:'}</h3>}
                 <ul>
                     {this.state.unsafePlaces.map((place, index) => <li key={index}>{place.name}</li>)}
                 </ul>
